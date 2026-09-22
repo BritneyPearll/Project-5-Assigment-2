@@ -6,59 +6,86 @@
 
 using namespace std;
 
-// Store each student's information
 struct STUDENT_DATA
 {
     string firstName;
     string lastName;
+
+#ifdef PRE_RELEASE
+    string email;
+#endif
 };
 
 int main()
 {
     vector<STUDENT_DATA> students;
 
-    // Open the student data file
+#ifdef PRE_RELEASE
+    cout << "Running Pre-Release Version" << endl;
+    ifstream file("StudentData_Emails.txt");
+#else
+    cout << "Running Standard Version" << endl;
     ifstream file("StudentData.txt");
+#endif
 
     if (!file.is_open())
     {
-        cout << "Error opening StudentData.txt" << endl;
+        cout << "Error opening student data file!" << endl;
         return 1;
     }
 
     string line;
 
-    // Read each student from the file
     while (getline(file, line))
     {
-        size_t comma = line.find(',');
+        size_t firstComma = line.find(',');
 
-        if (comma != string::npos)
-        {
-            STUDENT_DATA student;
+        if (firstComma == string::npos)
+            continue;
 
-            student.firstName = line.substr(0, comma);
-            student.lastName = line.substr(comma + 1);
+        STUDENT_DATA student;
 
-            students.push_back(student);
-        }
+        student.firstName = line.substr(0, firstComma);
+
+#ifdef PRE_RELEASE
+        size_t secondComma = line.find(',', firstComma + 1);
+
+        if (secondComma == string::npos)
+            continue;
+
+        student.lastName = line.substr(
+            firstComma + 1,
+            secondComma - firstComma - 1
+        );
+
+        student.email = line.substr(secondComma + 1);
+#else
+        student.lastName = line.substr(firstComma + 1);
+#endif
+
+        students.push_back(student);
     }
 
     file.close();
 
-    // Display all students
-    cout << "STUDENT LIST" << endl;
+#ifdef _DEBUG
+    cout << "\nSTUDENT LIST" << endl;
     cout << "------------------------" << endl;
 
     for (const auto& student : students)
     {
         cout << "First Name: " << student.firstName << endl;
         cout << "Last Name: " << student.lastName << endl;
+
+#ifdef PRE_RELEASE
+        cout << "Email: " << student.email << endl;
+#endif
+
         cout << "------------------------" << endl;
     }
 
-    // Display total number of students
     cout << "Total students: " << students.size() << endl;
+#endif
 
     return 0;
 }
